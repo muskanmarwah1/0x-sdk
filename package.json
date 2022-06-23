@@ -40,11 +40,11 @@
   "size-limit": [
     {
       "path": "dist/zero-ex-sdk.cjs.production.min.js",
-      "limit": "10 KB"
+      "limit": "50 KB"
     },
     {
       "path": "dist/zero-ex-sdk.esm.js",
-      "limit": "10 KB"
+      "limit": "50 KB"
     }
   ],
   "devDependencies": {
