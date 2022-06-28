@@ -4,11 +4,22 @@ import {
   DAI_CONTRACT_ADDRESS_MAINNET,
 } from '../src/constants';
 
+import { Wallet } from '@ethersproject/wallet';
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import { GOERLI_RPC_TESTNET } from '../src/constants';
+
 describe('ZeroExSdk: get liquidity', () => {
+  const WALLET_PRIVATE_KEY =
+    'ebc9ecb342624853540531f439a917b889bdf7730fa84f226657831f806b0677';
+  const GOERLI_PROVIDER = new StaticJsonRpcProvider(GOERLI_RPC_TESTNET);
+  const WALLET = new Wallet(WALLET_PRIVATE_KEY);
+  const SIGNER = WALLET.connect(GOERLI_PROVIDER);
+  const CHAIN_ID = 1;
+
   describe('indicative price', () => {
     it('fetches an indicative price', async () => {
       const SELL_AMOUNT = (1e18).toString();
-      const sdk = new ZeroExSdk(1);
+      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const price = await sdk.getIndicativePrice({
         sellToken: 'ETH',
         buyToken: 'DAI',
@@ -30,7 +41,7 @@ describe('ZeroExSdk: get liquidity', () => {
     });
 
     it('validates sellAmount and buyAmount params', async () => {
-      const sdk = new ZeroExSdk(1);
+      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: 'usdc',
         sellAmount: '1000000000000000000',
@@ -49,7 +60,7 @@ describe('ZeroExSdk: get liquidity', () => {
     });
 
     it('handles indicative price request errors', async () => {
-      const sdk = new ZeroExSdk(1);
+      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         sellAmount: '26302304322109228',
@@ -74,7 +85,7 @@ describe('ZeroExSdk: get liquidity', () => {
   describe('firm quote', () => {
     it('fetches a firm quote', async () => {
       const SELL_AMOUNT = (1e18).toString();
-      const sdk = new ZeroExSdk(1);
+      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const quote = await sdk.getFirmQuote({
         sellToken: 'ETH',
         buyToken: 'DAI',
@@ -96,7 +107,7 @@ describe('ZeroExSdk: get liquidity', () => {
     });
 
     it('validates sellAmount and buyAmount params', async () => {
-      const sdk = new ZeroExSdk(1);
+      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: 'usdc',
         sellAmount: '1000000000000000000',
@@ -115,7 +126,7 @@ describe('ZeroExSdk: get liquidity', () => {
     });
 
     it('handles firm quote request errors', async () => {
-      const sdk = new ZeroExSdk(1);
+      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         sellAmount: '26302304322109228',

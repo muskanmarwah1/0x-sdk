@@ -1,3 +1,5 @@
+import { Overrides } from '@ethersproject/contracts';
+
 interface PriceComparison {
   name: string;
   price: string | null;
@@ -78,3 +80,7 @@ export interface RequestError {
   reason: string;
   validationErrors: ValidationError[];
 }
+
+export type TransactionOverrides = Overrides & {
+  from?: string | Promise<string>;
+};

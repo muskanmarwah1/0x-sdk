@@ -2,19 +2,13 @@
 
 ## Development quick start
 
-1) Install dependencies
+1. Install dependencies, generate types, and run build
 
 ```
-yarn install
+yarn
 ```
 
-2) Generate TypeScript bindings for smart contracts
-
-```
-yarn generate-types
-```
-
-3) Run tests
+2. Run tests
 
 ```
 yarn test

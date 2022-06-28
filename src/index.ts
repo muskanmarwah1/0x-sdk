@@ -2,12 +2,28 @@ import qs from 'qs';
 import fetch from 'isomorphic-unfetch';
 import { validateAmounts, validateResponse, getRootApiEndpoint } from './utils';
 import { Price, Quote, SwapParams } from './types';
+import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
+import { Signer } from '@ethersproject/abstract-signer';
+import { BaseProvider } from '@ethersproject/providers';
+import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
+import { TransactionOverrides } from './types';
+import { ETH_FAKE_ADDRESS } from './constants';
+import { Erc20__factory } from './contracts';
 
 class ZeroExSdk {
   private chainId: number;
 
-  constructor(chainId: string | number) {
+  public provider: BaseProvider;
+  public signer: Signer;
+
+  constructor(
+    chainId: string | number,
+    provider: BaseProvider,
+    signer: Signer
+  ) {
     this.chainId = parseInt(chainId.toString(10), 10);
+    this.provider = provider;
+    this.signer = signer;
   }
 
   /**
@@ -55,6 +71,39 @@ class ZeroExSdk {
 
     return data;
   }
+
+  approveToken = async (
+    tokenAddress: string,
+    zeroExContractAddress: string,
+    amount?: BigNumberish,
+    txOptions?: TransactionOverrides
+  ) => {
+    const erc20 = Erc20__factory.connect(tokenAddress, this.signer);
+    const tx = erc20.approve(zeroExContractAddress, amount ?? MaxInt256, {
+      ...txOptions,
+    });
+
+    return tx;
+  };
+
+  getAllowance = async (
+    tokenAddress: string,
+    zeroExContractAddress: string,
+    walletAddress: string
+  ): Promise<BigNumber> => {
+    const erc20 = Erc20__factory.connect(tokenAddress, this.provider);
+
+    if (tokenAddress.toLowerCase() === ETH_FAKE_ADDRESS) {
+      return MaxUint256;
+    }
+
+    const approvalAmount = await erc20.allowance(
+      walletAddress,
+      zeroExContractAddress
+    );
+
+    return approvalAmount;
+  };
 }
 
 export { ZeroExSdk };
