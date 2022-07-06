@@ -1,12 +1,13 @@
+import { StaticJsonRpcProvider } from '@ethersproject/providers';
+import { Wallet } from '@ethersproject/wallet';
 import { ZeroExSdk } from '../src';
 import {
   ETH_FAKE_ADDRESS,
   DAI_CONTRACT_ADDRESS_MAINNET,
+  ROPSTEN_RPC_TESTNET,
+  GOERLI_RPC_TESTNET,
+  CHAIN_IDS,
 } from '../src/constants';
-
-import { Wallet } from '@ethersproject/wallet';
-import { StaticJsonRpcProvider } from '@ethersproject/providers';
-import { GOERLI_RPC_TESTNET } from '../src/constants';
 
 describe('ZeroExSdk: get liquidity', () => {
   const WALLET_PRIVATE_KEY =
@@ -14,7 +15,7 @@ describe('ZeroExSdk: get liquidity', () => {
   const GOERLI_PROVIDER = new StaticJsonRpcProvider(GOERLI_RPC_TESTNET);
   const WALLET = new Wallet(WALLET_PRIVATE_KEY);
   const SIGNER = WALLET.connect(GOERLI_PROVIDER);
-  const CHAIN_ID = 1;
+  const CHAIN_ID = CHAIN_IDS.MAINNET;
 
   describe('indicative price', () => {
     it('fetches an indicative price', async () => {
@@ -147,6 +148,36 @@ describe('ZeroExSdk: get liquidity', () => {
           sellToken: 'eth',
         })
       ).resolves.toBeTruthy();
+    });
+  });
+});
+
+describe('ZeroExSdk: fill swap order', () => {
+  jest.setTimeout(120 * 1000);
+  const WALLET_PRIVATE_KEY =
+    'ebc9ecb342624853540531f439a917b889bdf7730fa84f226657831f806b0677';
+  // Use Ropsten until 0x API releases Goerli endpoint
+  const ROPSTEN_PROVIDER = new StaticJsonRpcProvider(ROPSTEN_RPC_TESTNET);
+  const WALLET = new Wallet(WALLET_PRIVATE_KEY);
+  const SIGNER = WALLET.connect(ROPSTEN_PROVIDER);
+  const CHAIN_ID = CHAIN_IDS.ROPSTEN;
+
+  describe('fill swap order', () => {
+    it('successfully fills a swap order', async () => {
+      const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER);
+      // Fetches firm quote
+      const quote = await sdk.getFirmQuote({
+        sellToken: 'ETH',
+        buyToken: 'DAI',
+        sellAmount: (1e9).toString(),
+        takerAddress: SIGNER.address,
+      });
+      // Fills quote and wait for tx confirmation
+      const txResponse = await sdk.fillOrder(quote);
+      // Wait for tx to be confirmed and mined
+      const { status, transactionHash } = await txResponse.wait();
+      expect(status).toBe(1); // 0 = reverted, 1 = success
+      expect(transactionHash).toBeTruthy();
     });
   });
 });

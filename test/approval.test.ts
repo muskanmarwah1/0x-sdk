@@ -2,7 +2,11 @@ import { Wallet } from '@ethersproject/wallet';
 import { MaxInt256 } from '@ethersproject/constants';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { ZeroExSdk } from '../src';
-import { GOERLI_RPC_TESTNET, ZEROEX_CONTRACT_ADDRESS } from '../src/constants';
+import {
+  GOERLI_RPC_TESTNET,
+  ZEROEX_CONTRACT_ADDRESS,
+  CHAIN_IDS,
+} from '../src/constants';
 
 // Sometimes it takes a minute or two to mine a block on a testnet
 jest.setTimeout(120 * 1000);
@@ -16,7 +20,7 @@ describe('ZeroExSdk: erc20 approval and allowance', () => {
     const GOERLI_PROVIDER = new StaticJsonRpcProvider(GOERLI_RPC_TESTNET);
     const WALLET = new Wallet(WALLET_PRIVATE_KEY);
     const SIGNER = WALLET.connect(GOERLI_PROVIDER);
-    const CHAIN_ID = 5;
+    const CHAIN_ID = CHAIN_IDS.GOERLI;
     const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
     const tx = await sdk.approveToken(
       WETH_GOERLI_ADDRESS,

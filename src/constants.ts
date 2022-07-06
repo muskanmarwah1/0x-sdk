@@ -15,8 +15,18 @@ export const ROOT_URLS_BY_CHAIN_ID: { [key: string]: string } = {
   '42220': 'https://celo.api.0x.org',
   '43114': 'https://avalanche.api.0x.org',
 };
+
+export const CHAIN_IDS = {
+  MAINNET: 1,
+  ROPSTEN: 3,
+  GOERLI: 5,
+};
+
 export const ZEROEX_CONTRACT_ADDRESS =
   '0xdef1c0ded9bec7f1a1670819833240f027b25eff';
 
 export const GOERLI_RPC_TESTNET =
   'https://eth-goerli.alchemyapi.io/v2/3uBwwsbTUghgLSuVQMXjfGTSazAoohra';
+
+export const ROPSTEN_RPC_TESTNET =
+  'https://eth-ropsten.alchemyapi.io/v2/36Mh0KAHXg5zAAzoAFOvlwmVSXDWDTJY';

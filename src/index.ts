@@ -1,14 +1,13 @@
-import qs from 'qs';
-import fetch from 'isomorphic-unfetch';
-import { validateAmounts, validateResponse, getRootApiEndpoint } from './utils';
-import { Price, Quote, SwapParams } from './types';
-import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import { Signer } from '@ethersproject/abstract-signer';
-import { BaseProvider } from '@ethersproject/providers';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
-import { TransactionOverrides } from './types';
+import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
+import { BaseProvider, TransactionResponse } from '@ethersproject/providers';
+import fetch from 'isomorphic-unfetch';
+import qs from 'qs';
 import { ETH_FAKE_ADDRESS } from './constants';
 import { Erc20__factory } from './contracts';
+import { Price, Quote, SwapParams, TransactionOverrides } from './types';
+import { validateAmounts, validateResponse, getRootApiEndpoint } from './utils';
 
 class ZeroExSdk {
   private chainId: number;
@@ -104,6 +103,28 @@ class ZeroExSdk {
 
     return approvalAmount;
   };
+
+  /**
+   * Submits the ERC-20 token swap on chain
+   * @param quote - The data returned from getFirmQuote()
+   * @returns The transaction response
+   */
+  async fillOrder(quote: Quote): Promise<TransactionResponse> {
+    if (!quote) {
+      throw new Error(`No quote data provided!`);
+    }
+
+    const txResponse = await this.signer.sendTransaction({
+      to: quote.to,
+      data: quote.data,
+      gasLimit: quote.gas,
+      gasPrice: quote.gasPrice,
+      value: quote.value,
+      chainId: this.chainId,
+    });
+
+    return txResponse;
+  }
 }
 
 export { ZeroExSdk };
