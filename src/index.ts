@@ -6,23 +6,38 @@ import fetch from 'isomorphic-unfetch';
 import qs from 'qs';
 import { ETH_FAKE_ADDRESS } from './constants';
 import { Erc20__factory } from './contracts';
-import { Price, Quote, SwapParams, TransactionOverrides } from './types';
-import { validateAmounts, validateResponse, getRootApiEndpoint } from './utils';
+import {
+  ZeroExSdkOptions,
+  FetchPriceOrQuoteArgs,
+  SwapPrice,
+  TransactionOverrides,
+  RfqmPrice,
+  RfqmQuote,
+  SwapQuote,
+} from './types';
+import {
+  validateAmounts,
+  validateResponse,
+  getRootApiEndpoint,
+  verifyRfqmIsLiveOrThrow,
+} from './utils';
 
 class ZeroExSdk {
   private chainId: number;
-
   public provider: BaseProvider;
   public signer: Signer;
+  private ZeroExSdkOptions?: ZeroExSdkOptions;
 
   constructor(
     chainId: string | number,
     provider: BaseProvider,
-    signer: Signer
+    signer: Signer,
+    ZeroExSdkOptions?: ZeroExSdkOptions
   ) {
     this.chainId = parseInt(chainId.toString(10), 10);
     this.provider = provider;
     this.signer = signer;
+    this.ZeroExSdkOptions = ZeroExSdkOptions;
   }
 
   /**
@@ -30,21 +45,39 @@ class ZeroExSdk {
    * - {@link https://docs.0x.org/0x-api-swap/api-references/get-swap-v1-price}
    * - {@link https://docs.0x.org/market-makers/docs/introduction#indicative-pricing}
    *
-   * @param params - The request params for the 0x API `/swap` endpoint.
-   * @param fetchFn - An optional fetch function.
+   * @param params: The request params for the 0x API `/price` endpoint.
+   * @param type: Optional 'swap' or 'rfqm' resource type. Defaults to 'swap'.
+   * @param fetchFn: An optional fetch function.
    * @returns The indicative price
    */
-  async getIndicativePrice(params: SwapParams, fetchFn = fetch) {
+  async getIndicativePrice({
+    params,
+    resource = 'swap',
+    fetchFn = fetch,
+  }: FetchPriceOrQuoteArgs): Promise<SwapPrice | RfqmPrice> {
     validateAmounts(params);
+    const endpoint =
+      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
 
-    const endpoint = getRootApiEndpoint(this.chainId);
+    if (resource === 'rfqm') {
+      verifyRfqmIsLiveOrThrow(endpoint);
+      const url = `${endpoint}/rfqm/v1/price?${qs.stringify(params)}`;
+      const response = await fetchFn(url, {
+        headers: {
+          ...(this.ZeroExSdkOptions?.apiKey && {
+            '0x-api-key': this.ZeroExSdkOptions?.apiKey,
+          }),
+        },
+      });
+      await validateResponse(response);
+      const data: RfqmPrice = await response.json();
+      return data;
+    }
+
     const url = `${endpoint}/swap/v1/price?${qs.stringify(params)}`;
     const response = await fetchFn(url);
-
     await validateResponse(response);
-
-    const data: Price = await response.json();
-
+    const data: SwapPrice = await response.json();
     return data;
   }
 
@@ -53,20 +86,41 @@ class ZeroExSdk {
    * - {@link https://docs.0x.org/0x-api-swap/api-references/get-swap-v1-quote}
    * - {@link https://docs.0x.org/market-makers/docs/introduction#firm-quotes}
    *
-   * @param params - The request params for the 0x API `/quote` endpoint.
-   * @param fetchFn - An optional fetch function.
+   * @param params: The request params for the 0x API `/quote` endpoint.
+   * @param type: Optional 'swap' or 'rfqm' resource type. Defaults to 'swap'.
+   * @param fetchFn: An optional fetch function.
    * @returns The firm quote
    */
-  async getFirmQuote(params: SwapParams, fetchFn = fetch) {
+  async getFirmQuote({
+    params,
+    resource = 'swap',
+    fetchFn = fetch,
+  }: FetchPriceOrQuoteArgs): Promise<SwapQuote | RfqmQuote> {
     validateAmounts(params);
+    const endpoint =
+      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
 
-    const endpoint = getRootApiEndpoint(this.chainId);
+    if (resource === 'rfqm') {
+      verifyRfqmIsLiveOrThrow(endpoint);
+      const url = `${endpoint}/rfqm/v1/quote?${qs.stringify(params)}`;
+      const response = await fetchFn(url, {
+        headers: {
+          ...(this.ZeroExSdkOptions?.apiKey && {
+            '0x-api-key': this.ZeroExSdkOptions?.apiKey,
+          }),
+        },
+      });
+      await validateResponse(response);
+      const data: RfqmQuote = await response.json();
+      return data;
+    }
+
     const url = `${endpoint}/swap/v1/quote?${qs.stringify(params)}`;
     const response = await fetchFn(url);
 
     await validateResponse(response);
 
-    const data: Quote = await response.json();
+    const data: SwapQuote = await response.json();
 
     return data;
   }
@@ -109,7 +163,7 @@ class ZeroExSdk {
    * @param quote - The data returned from getFirmQuote()
    * @returns The transaction response
    */
-  async fillOrder(quote: Quote): Promise<TransactionResponse> {
+  async fillOrder(quote: SwapQuote): Promise<TransactionResponse> {
     if (!quote) {
       throw new Error(`No quote data provided!`);
     }

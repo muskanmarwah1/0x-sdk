@@ -8,6 +8,7 @@ import {
   GOERLI_RPC_TESTNET,
   CHAIN_IDS,
 } from '../src/constants';
+import { SwapQuote } from '../src/types';
 
 describe('ZeroExSdk: get liquidity', () => {
   const WALLET_PRIVATE_KEY =
@@ -22,9 +23,11 @@ describe('ZeroExSdk: get liquidity', () => {
       const SELL_AMOUNT = (1e18).toString();
       const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const price = await sdk.getIndicativePrice({
-        sellToken: 'ETH',
-        buyToken: 'DAI',
-        sellAmount: SELL_AMOUNT,
+        params: {
+          sellToken: 'ETH',
+          buyToken: 'DAI',
+          sellAmount: SELL_AMOUNT,
+        },
       });
 
       expect(price.sellAmount).toBe(SELL_AMOUNT);
@@ -50,14 +53,14 @@ describe('ZeroExSdk: get liquidity', () => {
       };
 
       await expect(
-        sdk.getIndicativePrice({ ...params, buyAmount: '1000000' })
+        sdk.getIndicativePrice({ params: { ...params, buyAmount: '1000000' } })
       ).rejects.toThrow('Do not provide both fields');
 
-      await expect(sdk.getIndicativePrice({})).rejects.toThrow(
+      await expect(sdk.getIndicativePrice({ params: {} })).rejects.toThrow(
         'The swap request params requires either a sellAmount or buyAmount'
       );
 
-      await expect(sdk.getIndicativePrice(params)).resolves.toBeTruthy();
+      await expect(sdk.getIndicativePrice({ params })).resolves.toBeTruthy();
     });
 
     it('handles indicative price request errors', async () => {
@@ -69,15 +72,19 @@ describe('ZeroExSdk: get liquidity', () => {
 
       await expect(
         sdk.getIndicativePrice({
-          ...params,
-          sellToken: 'doesntexist',
+          params: {
+            ...params,
+            sellToken: 'doesntexist',
+          },
         })
       ).rejects.toThrow('Could not find token `doesntexist`');
 
       await expect(
         sdk.getIndicativePrice({
-          ...params,
-          sellToken: 'weth',
+          params: {
+            ...params,
+            sellToken: 'weth',
+          },
         })
       ).resolves.toBeTruthy();
     });
@@ -88,9 +95,11 @@ describe('ZeroExSdk: get liquidity', () => {
       const SELL_AMOUNT = (1e18).toString();
       const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const quote = await sdk.getFirmQuote({
-        sellToken: 'ETH',
-        buyToken: 'DAI',
-        sellAmount: SELL_AMOUNT,
+        params: {
+          sellToken: 'ETH',
+          buyToken: 'DAI',
+          sellAmount: SELL_AMOUNT,
+        },
       });
 
       expect(quote.sellAmount).toBe(SELL_AMOUNT);
@@ -104,7 +113,9 @@ describe('ZeroExSdk: get liquidity', () => {
         DAI_CONTRACT_ADDRESS_MAINNET
       );
       expect(quote.sellTokenAddress.toLowerCase()).toBe(ETH_FAKE_ADDRESS);
-      expect(quote.data).toBeTruthy();
+      if ('data' in quote) {
+        expect(quote?.data).toBeTruthy();
+      }
     });
 
     it('validates sellAmount and buyAmount params', async () => {
@@ -116,14 +127,14 @@ describe('ZeroExSdk: get liquidity', () => {
       };
 
       await expect(
-        sdk.getFirmQuote({ ...params, buyAmount: '1000000' })
+        sdk.getFirmQuote({ params: { ...params, buyAmount: '1000000' } })
       ).rejects.toThrow('Do not provide both fields');
 
-      await expect(sdk.getFirmQuote({})).rejects.toThrow(
+      await expect(sdk.getFirmQuote({ params: {} })).rejects.toThrow(
         'The swap request params requires either a sellAmount or buyAmount'
       );
 
-      await expect(sdk.getFirmQuote(params)).resolves.toBeTruthy();
+      await expect(sdk.getFirmQuote({ params })).resolves.toBeTruthy();
     });
 
     it('handles firm quote request errors', async () => {
@@ -137,15 +148,19 @@ describe('ZeroExSdk: get liquidity', () => {
 
       await expect(
         sdk.getFirmQuote({
-          ...params,
-          sellToken: 'doesntexist',
+          params: {
+            ...params,
+            sellToken: 'doesntexist',
+          },
         })
       ).rejects.toThrow('Could not find token `doesntexist`');
 
       await expect(
         sdk.getFirmQuote({
-          ...params,
-          sellToken: 'eth',
+          params: {
+            ...params,
+            sellToken: 'eth',
+          },
         })
       ).resolves.toBeTruthy();
     });
@@ -166,12 +181,14 @@ describe('ZeroExSdk: fill swap order', () => {
     it('successfully fills a swap order', async () => {
       const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER);
       // Fetches firm quote
-      const quote = await sdk.getFirmQuote({
-        sellToken: 'ETH',
-        buyToken: 'DAI',
-        sellAmount: (1e9).toString(),
-        takerAddress: SIGNER.address,
-      });
+      const quote = (await sdk.getFirmQuote({
+        params: {
+          sellToken: 'ETH',
+          buyToken: 'DAI',
+          sellAmount: (1e9).toString(),
+          takerAddress: SIGNER.address,
+        },
+      })) as SwapQuote;
       // Fills quote and wait for tx confirmation
       const txResponse = await sdk.fillOrder(quote);
       // Wait for tx to be confirmed and mined

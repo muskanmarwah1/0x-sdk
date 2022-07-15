@@ -1,11 +1,22 @@
 import { Overrides } from '@ethersproject/contracts';
 
+export interface ZeroExSdkOptions {
+  apiUrl?: string;
+  apiKey?: string;
+}
+
+export type ResourceType = 'swap' | 'rfqm';
+
+export interface FetchPriceOrQuoteArgs {
+  params: SwapParams;
+  resource?: ResourceType;
+  fetchFn?: Function;
+}
 interface PriceComparison {
   name: string;
   price: string | null;
   gas: string | null;
 }
-
 interface Order {
   makerToken: string;
   takerToken: string;
@@ -25,6 +36,30 @@ interface LiquiditySource {
   proportion: string;
 }
 
+export enum RfqmTypes {
+  MetaTransaction = 'metatransaction',
+  OtcOrder = 'otc',
+}
+export interface SerializedExchangeProxyRfqm {
+  makerToken: string;
+  takerToken: string;
+  makerAmount: string;
+  takerAmount: string;
+  maker: string;
+  taker: string;
+  txOrigin: string;
+  expiryAndNonce: string;
+  verifyingContract: string;
+  chainId: number;
+  domain: EIP712DomainWithDefaultSchema;
+}
+
+export interface EIP712DomainWithDefaultSchema {
+  name?: string;
+  version?: string;
+  chainId: number;
+  verifyingContract: string;
+}
 export interface SwapParams {
   sellToken?: string;
   buyToken?: string;
@@ -42,7 +77,7 @@ export interface SwapParams {
   includedSources?: string[];
 }
 
-export interface Price {
+export interface SwapPrice {
   price: string;
   to: string;
   gasPrice: string;
@@ -65,10 +100,30 @@ export interface Price {
   sellTokenToEthRate?: string;
 }
 
-export interface Quote extends Price {
-  data: string;
+export interface RfqmPrice {
+  price: string;
+  buyAmount: string;
+  sellAmount: string;
+  buyTokenAddress: string;
+  sellTokenAddress: string;
+  allowanceTarget: string;
+  liquidityAvailable: boolean;
+  gas: string;
 }
 
+type RfqmPairs = string[];
+export interface RfqmBackendHealthcheckStatusResponse {
+  isOperational: boolean;
+  pairs: RfqmPairs[];
+}
+export interface SwapQuote extends SwapPrice {
+  data: string;
+}
+export interface RfqmQuote extends RfqmPrice {
+  order: SerializedExchangeProxyRfqm;
+  orderHash: string;
+  type: RfqmTypes.OtcOrder;
+}
 interface ValidationError {
   field: string;
   code: number;

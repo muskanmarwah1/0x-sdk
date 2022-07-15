@@ -1,5 +1,9 @@
 import { ROOT_STAGING_URL, ROOT_URLS_BY_CHAIN_ID } from './constants';
-import { SwapParams, RequestError } from './types';
+import {
+  SwapParams,
+  RequestError,
+  RfqmBackendHealthcheckStatusResponse,
+} from './types';
 
 export const getRootApiEndpoint = (chainId: number | string): string => {
   if (typeof window === 'undefined') {
@@ -52,6 +56,21 @@ export const validateResponse = async (response: Response) => {
     const message = `[${data.reason}] ${causes.join(' ')}`;
 
     throw new Error(message);
+  }
+
+  return undefined;
+};
+
+export const verifyRfqmIsLiveOrThrow = async (
+  endpoint: string,
+  fetchFn = fetch
+) => {
+  const healthUrl = `${endpoint}/rfqm/v1/healthz`;
+  const healthResponse = await fetchFn(healthUrl);
+  const parsedHealthResponse: RfqmBackendHealthcheckStatusResponse = await healthResponse.json();
+
+  if (!parsedHealthResponse?.isOperational) {
+    throw new Error(`RFQm service is down.`);
   }
 
   return undefined;
