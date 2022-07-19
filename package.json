@@ -37,7 +37,7 @@
   "eslintIgnore": [
     "src/contracts"
   ],
-  "name": "zero-ex-sdk",
+  "name": "@0x/0x-sdk",
   "author": "0x Labs",
   "module": "dist/zero-ex-sdk.esm.js",
   "size-limit": [
