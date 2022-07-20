@@ -47,7 +47,7 @@
     },
     {
       "path": "dist/zero-ex-sdk.esm.js",
-      "limit": "200 KB"
+      "limit": "250 KB"
     }
   ],
   "devDependencies": {

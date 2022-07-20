@@ -46,16 +46,17 @@ export const validateResponse = async (response: Response) => {
     const causes: string[] = [];
     const data: RequestError = await response.json();
 
-    data.validationErrors.map(error => {
-      const { field, reason } = error;
-      causes.push(`${field}: ${reason}.`);
+    if (data.validationErrors) {
+      data.validationErrors.map(error => {
+        const { field, reason } = error;
+        causes.push(`${field}: ${reason}.`);
+        return undefined;
+      });
+      const message = `[${data.reason}] ${causes.join(' ')}`;
+      throw new Error(message);
+    }
 
-      return undefined;
-    });
-
-    const message = `[${data.reason}] ${causes.join(' ')}`;
-
-    throw new Error(message);
+    throw new Error(data.reason);
   }
 
   return undefined;

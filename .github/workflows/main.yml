@@ -28,6 +28,7 @@ jobs:
 
       - name: Test
         run: yarn test --ci --coverage
-
+        env:
+          RFQM_API_KEY: ${{ secrets.RFQM_API_KEY }}
       - name: Build
         run: yarn build

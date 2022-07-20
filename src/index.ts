@@ -2,6 +2,7 @@ import { Signer } from '@ethersproject/abstract-signer';
 import { BigNumber, BigNumberish } from '@ethersproject/bignumber';
 import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
 import { BaseProvider, TransactionResponse } from '@ethersproject/providers';
+import { arrayify, splitSignature } from '@ethersproject/bytes';
 import fetch from 'isomorphic-unfetch';
 import qs from 'qs';
 import { ETH_FAKE_ADDRESS } from './constants';
@@ -14,6 +15,9 @@ import {
   RfqmPrice,
   RfqmQuote,
   SwapQuote,
+  PostRfqmTransactionSubmitSerializedResponse,
+  RfqmTransactionStatusResponse,
+  RfqmTypes,
 } from './types';
 import {
   validateAmounts,
@@ -178,6 +182,89 @@ class ZeroExSdk {
     });
 
     return txResponse;
+  }
+
+  /**
+   * Signs the RFQm order and submits it to authorize 0x to perform the swap on behalf of signers
+   * - {@link https://docs.0x.org/market-makers/guides/signing-0x-orders}
+   * - {@link https://docs.0x.org/market-makers/docs/introduction#rfq-m-1}
+   * @param quote - The data returned from getFirmQuote()
+   * @param fetchFn: An optional fetch function.
+   * @returns The transaction response after RFQm fill submission
+   */
+  async fillRfqmOrder(
+    quote: RfqmQuote,
+    fetchFn = fetch
+  ): Promise<PostRfqmTransactionSubmitSerializedResponse> {
+    if (!quote) {
+      throw new Error(`No quote data provided!`);
+    }
+
+    const rawSignature = await this.signer.signMessage(
+      arrayify(quote.orderHash)
+    );
+    const { v, r, s } = splitSignature(rawSignature);
+    const unpackedSignedSignature = {
+      v,
+      r,
+      s,
+      signatureType: 3,
+    };
+
+    const endpoint =
+      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
+    const url = `${endpoint}/rfqm/v1/submit`;
+    const body = {
+      signature: unpackedSignedSignature,
+      order: quote.order,
+      type: RfqmTypes.OtcOrder,
+    };
+
+    const response = await fetchFn(url, {
+      method: 'POST',
+      headers: {
+        ...(this.ZeroExSdkOptions?.apiKey && {
+          '0x-api-key': this.ZeroExSdkOptions?.apiKey,
+          'Content-Type': 'application/json',
+        }),
+      },
+      body: JSON.stringify(body),
+    });
+
+    await validateResponse(response);
+
+    const data: PostRfqmTransactionSubmitSerializedResponse = await response.json();
+
+    return data;
+  }
+
+  /**
+   * Fetches the RFQm order transaction status
+   * @param txHash: The order transaction hash from RFQm fill submission
+   * @param fetchFn: An optional fetch function.
+   * @returns The transaction status and all transactions executed for the RFQm order
+   */
+  async getRfqmTxStatus(
+    txHash: string,
+    fetchFn = fetch
+  ): Promise<RfqmTransactionStatusResponse> {
+    if (!txHash) {
+      throw new Error(`Transaction hash not provided!`);
+    }
+
+    const endpoint =
+      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
+    const statusUrl = `${endpoint}/rfqm/v1/status/${txHash}`;
+    const response = await fetchFn(statusUrl, {
+      headers: {
+        ...(this.ZeroExSdkOptions?.apiKey && {
+          '0x-api-key': this.ZeroExSdkOptions?.apiKey,
+        }),
+      },
+    });
+    const data: RfqmTransactionStatusResponse = await response.json();
+
+    return data;
   }
 }
 

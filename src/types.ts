@@ -124,6 +124,24 @@ export interface RfqmQuote extends RfqmPrice {
   orderHash: string;
   type: RfqmTypes.OtcOrder;
 }
+
+export interface PostRfqmTransactionSubmitSerializedResponse {
+  metaTransactionHash: string;
+  orderHash: string;
+  type: RfqmTypes.OtcOrder;
+}
+
+export enum RfqmTransactionStates {
+  Pending = 'pending',
+  Submitted = 'submitted',
+  Failed = 'failed',
+  Succeeded = 'succeeded',
+  Confirmed = 'confirmed',
+}
+export interface RfqmTransactionStatusResponse {
+  status: RfqmTransactionStates;
+  transactions: { hash: string; timestamp: number }[];
+}
 interface ValidationError {
   field: string;
   code: number;
@@ -133,7 +151,7 @@ interface ValidationError {
 export interface RequestError {
   code: number;
   reason: string;
-  validationErrors: ValidationError[];
+  validationErrors?: ValidationError[];
 }
 
 export type TransactionOverrides = Overrides & {
