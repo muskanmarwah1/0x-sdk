@@ -22,19 +22,19 @@ describe('ZeroExSdk: erc20 approval and allowance', () => {
     const SIGNER = WALLET.connect(GOERLI_PROVIDER);
     const CHAIN_ID = CHAIN_IDS.GOERLI;
     const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
-    const tx = await sdk.approveToken(
-      WETH_GOERLI_ADDRESS,
-      ZEROEX_CONTRACT_ADDRESS
-    );
+    const tx = await sdk.approveToken({
+      tokenContractAddress: WETH_GOERLI_ADDRESS,
+      contractAddressToApprove: ZEROEX_CONTRACT_ADDRESS,
+    });
     const { transactionHash } = await tx.wait();
 
     expect(transactionHash).toBeTruthy();
 
-    const allowance = await sdk.getAllowance(
-      WETH_GOERLI_ADDRESS,
-      ZEROEX_CONTRACT_ADDRESS,
-      WALLET_PUBLIC_ADDRESS
-    );
+    const allowance = await sdk.getAllowance({
+      tokenContractAddress: WETH_GOERLI_ADDRESS,
+      contractAddressToApprove: ZEROEX_CONTRACT_ADDRESS,
+      walletAddress: WALLET_PUBLIC_ADDRESS,
+    });
 
     expect(allowance).toStrictEqual(MaxInt256);
   });
