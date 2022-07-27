@@ -13,6 +13,7 @@ yarn add @0x/0x-sdk
 ```
 
 ## Usage
+
 Swap tokens with the 0x SDK:
 
 ```ts
@@ -31,7 +32,7 @@ const params = {
 };
 
 // Get price to swap 1 WETH for DAI
-const price = await sdk.getIndicativePrice('swap', {
+const price = await sdk.getIndicativePrice({
   resource: 'swap',
   params,
 });
@@ -45,7 +46,7 @@ const quote = await sdk.getFirmQuote({
 // Approve ZeroEx Exchange Proxy to spend WETH
 const contractTx = await sdk.approveToken({
   tokenContractAddress: WETH_ADDRESS,
-  contractAddressToApprove: ZEROEX_CONTRACT_ADDRESS
+  contractAddressToApprove: ZEROEX_CONTRACT_ADDRESS,
 });
 
 await contractTx.wait();
