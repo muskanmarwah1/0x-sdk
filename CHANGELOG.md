@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.1](https://github.com/0xProject/0x-sdk/compare/v0.1.0...v0.1.1) (2022-07-29)
+
+
+### Bug Fixes
+
+* move typechain command to prepare hook instead of postinstall. ([#25](https://github.com/0xProject/0x-sdk/issues/25)) ([09413b1](https://github.com/0xProject/0x-sdk/commit/09413b1ffb0e2fa5ae1b3fa78687d360e7d9e025))
+
 ## 0.1.0 (2022-07-25)
 
 
