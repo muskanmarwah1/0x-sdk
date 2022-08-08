@@ -1,13 +1,13 @@
 import '@rainbow-me/rainbowkit/styles.css';
 import type { AppProps } from 'next/app';
 import {
-  RainbowKitProvider,
+  RainbowKitProvider, getDefaultWallets
 } from '@rainbow-me/rainbowkit';
 import { chain, configureChains, createClient, WagmiConfig } from 'wagmi';
 import { alchemyProvider } from 'wagmi/providers/alchemy';
 import { publicProvider } from 'wagmi/providers/public';
 
-const { chains, provider, webSocketProvider } = configureChains(
+const { chains, provider } = configureChains(
   [
     chain.mainnet,
     chain.polygon,
@@ -20,30 +20,21 @@ const { chains, provider, webSocketProvider } = configureChains(
 );
 
 
-import { connectorsForWallets, wallet } from '@rainbow-me/rainbowkit';
-
-
-/** TODO - Add Wallet connectors for Coinbase, etc. **/
-const connectors = connectorsForWallets([
-  {
-    groupName: 'Suggested',
-    wallets: [
-      wallet.metaMask({ chains }),
-    ],
-  },
-]);
+const { connectors } = getDefaultWallets({
+  appName: '0x-sdk Example App',
+  chains
+});
 
 const wagmiClient = createClient({
   autoConnect: true,
   connectors,
   provider,
-  webSocketProvider
 });
 
 function MyApp({ Component, pageProps }: AppProps) {
   return (
     <WagmiConfig client={wagmiClient}>
-      <RainbowKitProvider chains={chains}>
+      <RainbowKitProvider chains={chains} showRecentTransactions={true}>
         <Component {...pageProps} />
       </RainbowKitProvider>
     </WagmiConfig>

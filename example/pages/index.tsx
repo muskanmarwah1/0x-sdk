@@ -1,36 +1,36 @@
+import Head from 'next/head';
+import Image from 'next/image';
+import { ZeroExSdk } from '@0x/0x-sdk';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
-import styles from '../styles/Home.module.css'
-import Head from 'next/head'
-
-const ETH = {
-  id: "ethereum",
-  symbol: "eth",
-  name: "Ethereum",
-  image: "https://assets.coingecko.com/coins/images/279/large/ethereum.png?1595348880",
-};
-
-const USDC = {
-  id: "usd-coin",
-  symbol: "usdc",
-  name: "USD Coin",
-  image: "https://assets.coingecko.com/coins/images/6319/large/USD_Coin_icon.png?1547042389",
-};
-
-const DAI = {
-  id: "dai",
-  symbol: "DAI",
-  name: "Dai",
-  image: "https://assets.coingecko.com/coins/images/9956/large/4943.png?1636636734",
-};
-
-const MATIC = {
-  id: "matic-network",
-  symbol: "matic",
-  name: "Polygon",
-  image: "https://assets.coingecko.com/coins/images/4713/large/matic-token-icon.png?1624446912",
-}
+import { useState, useRef, useEffect } from 'react';
+import {
+  useAccountModal,
+  useAddRecentTransaction,
+} from '@rainbow-me/rainbowkit';
+import { useAccount, useNetwork, useProvider, useSigner } from 'wagmi';
+import { SwapPrice } from '@0x/0x-sdk/dist/types';
+import { requestPrice, processTransaction } from './handlers';
+import { WETH, DAI } from './constants';
+import styles from '../styles/Home.module.css';
+import { formatUnits } from 'ethers/lib/utils';
 
 function Home() {
+  const sdkRef = useRef<ZeroExSdk>();
+  const [sellAmount, setSellAmount] = useState('0');
+  const [price, setPrice] = useState<SwapPrice>();
+  const provider = useProvider();
+  const { address } = useAccount();
+  const { chain } = useNetwork();
+  const { data: signer } = useSigner();
+  const addRecentTransaction = useAddRecentTransaction();
+  const { openAccountModal } = useAccountModal();
+
+  useEffect(() => {
+    if (chain && signer) {
+      sdkRef.current = new ZeroExSdk(chain.id, provider, signer);
+    }
+  }, [signer, provider, chain]);
+
   return (
     <div className={styles.body}>
       <Head>
@@ -38,44 +38,71 @@ function Home() {
         <meta name="viewport" content="initial-scale=1.0, width=device-width" />
       </Head>
       <ConnectButton />
-      <div className={styles.card} >
-        <h4><b>Swap Token</b></h4>
+      <div className={styles.card}>
+        <h4>Swap Token</h4>
         <div className={styles.coinmodule}>
-          <img className={styles.image} id='sellTokenIcon' src={ETH.image} alt="ethereum" ></img>
-          <label hidden htmlFor="tokenOptionSell">sell token</label>
-          <select id='tokenOptionSell'>
-            <option key="eth" value="eth">ETH</option>
-            <option key="dai" value="dai">DAI</option>
-            <option key="matic" value="matic">MATIC</option>
-          </select>
-          <label hidden htmlFor="amountToSell">sell amount</label>
-          <input id='amountToSell' type='text' placeholder='Amount' />
-        </div>
-        <div>
-          <h5>Current Balance: 99.99</h5>
+          <Image
+            className={styles.image}
+            src={WETH.image}
+            alt="wrapped ethereum"
+            width="24"
+            height="24"
+          />
+          <div>WETH</div>
+          <label hidden htmlFor="sell-amount">
+            sell amount in WETH
+          </label>
+          <input
+            id="sell-amount"
+            type="text"
+            placeholder="Amount"
+            onChange={event => {
+              requestPrice({ event, sdkRef, address, setPrice, setSellAmount });
+            }}
+          />
         </div>
       </div>
       <div>&darr;</div>
       <div className={styles.card}>
-        <h4><b>Buy Token</b></h4>
+        <h4>Buy Token</h4>
         <div className={styles.coinmodule}>
-          <img className={styles.image} src={MATIC.image} alt="matic" ></img>
-          <label hidden htmlFor="tokenOptionBuy">buy token</label>
-          <select
-            id='tokenOptionBuy'>
-            <option key="eth" value="eth">ETH</option>
-            <option key="dai" value="dai">DAI</option>
-            <option key="matic" value="matic">MATIC</option>
-          </select>
-          <button type="button">Quote</button>
-        </div>
-        <div>
-          <h5>Quoted Amount: 99.99 MATIC</h5>
+          <Image
+            className={styles.image}
+            src={DAI.image}
+            alt="dai"
+            width="24"
+            height="24"
+          />
+          <div>DAI</div>
+          <label hidden htmlFor="buy-amount">
+            buy token in dai
+          </label>
+          <input
+            readOnly
+            type="text"
+            id="buy-amount"
+            value={price ? formatUnits(price?.buyAmount, 18) : ''}
+          />
         </div>
       </div>
+      <button
+        onClick={() => {
+          processTransaction({
+            chain,
+            sdkRef,
+            address,
+            sellAmount,
+            openAccountModal,
+            addRecentTransaction,
+          });
+        }}
+        type="button"
+      >
+        Submit
+      </button>
     </div>
-  )
-};
+  );
+}
+
 
 export default Home;
-
