@@ -5,29 +5,25 @@ import {
   ETH_FAKE_ADDRESS,
   DAI_CONTRACT_ADDRESS_MAINNET,
   ROPSTEN_RPC_TESTNET,
-  GOERLI_RPC_TESTNET,
+  // GOERLI_RPC_TESTNET,
   CHAIN_IDS,
 } from '../src/constants';
 import { SwapQuote } from '../src/types';
 
 describe('ZeroExSdk: get liquidity', () => {
-  const WALLET_PRIVATE_KEY =
-    'ebc9ecb342624853540531f439a917b889bdf7730fa84f226657831f806b0677';
-  const GOERLI_PROVIDER = new StaticJsonRpcProvider(GOERLI_RPC_TESTNET);
-  const WALLET = new Wallet(WALLET_PRIVATE_KEY);
-  const SIGNER = WALLET.connect(GOERLI_PROVIDER);
   const CHAIN_ID = CHAIN_IDS.MAINNET;
+  const sdk = new ZeroExSdk();
 
   describe('indicative price', () => {
     it('fetches an indicative price', async () => {
       const SELL_AMOUNT = (1e18).toString();
-      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const price = await sdk.getIndicativePrice({
         params: {
           sellToken: 'ETH',
           buyToken: 'DAI',
           sellAmount: SELL_AMOUNT,
         },
+        chainId: CHAIN_ID,
       });
 
       expect(price.sellAmount).toBe(SELL_AMOUNT);
@@ -45,7 +41,6 @@ describe('ZeroExSdk: get liquidity', () => {
     });
 
     it('validates sellAmount and buyAmount params', async () => {
-      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: 'usdc',
         sellAmount: '1000000000000000000',
@@ -53,18 +48,24 @@ describe('ZeroExSdk: get liquidity', () => {
       };
 
       await expect(
-        sdk.getIndicativePrice({ params: { ...params, buyAmount: '1000000' } })
+        sdk.getIndicativePrice({
+          params: { ...params, buyAmount: '1000000' },
+          chainId: CHAIN_ID,
+        })
       ).rejects.toThrow('Do not provide both fields');
 
-      await expect(sdk.getIndicativePrice({ params: {} })).rejects.toThrow(
+      await expect(
+        sdk.getIndicativePrice({ params: {}, chainId: CHAIN_ID })
+      ).rejects.toThrow(
         'The swap request params requires either a sellAmount or buyAmount'
       );
 
-      await expect(sdk.getIndicativePrice({ params })).resolves.toBeTruthy();
+      await expect(
+        sdk.getIndicativePrice({ params, chainId: CHAIN_ID })
+      ).resolves.toBeTruthy();
     });
 
     it('handles indicative price request errors', async () => {
-      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         sellAmount: '26302304322109228',
@@ -76,6 +77,7 @@ describe('ZeroExSdk: get liquidity', () => {
             ...params,
             sellToken: 'doesntexist',
           },
+          chainId: CHAIN_ID,
         })
       ).rejects.toThrow('Could not find token `doesntexist`');
 
@@ -85,6 +87,7 @@ describe('ZeroExSdk: get liquidity', () => {
             ...params,
             sellToken: 'weth',
           },
+          chainId: CHAIN_ID,
         })
       ).resolves.toBeTruthy();
     });
@@ -93,13 +96,13 @@ describe('ZeroExSdk: get liquidity', () => {
   describe('firm quote', () => {
     it('fetches a firm quote', async () => {
       const SELL_AMOUNT = (1e18).toString();
-      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const quote = await sdk.getFirmQuote({
         params: {
           sellToken: 'ETH',
           buyToken: 'DAI',
           sellAmount: SELL_AMOUNT,
         },
+        chainId: CHAIN_ID,
       });
 
       expect(quote.sellAmount).toBe(SELL_AMOUNT);
@@ -119,7 +122,6 @@ describe('ZeroExSdk: get liquidity', () => {
     });
 
     it('validates sellAmount and buyAmount params', async () => {
-      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: 'usdc',
         sellAmount: '1000000000000000000',
@@ -127,18 +129,24 @@ describe('ZeroExSdk: get liquidity', () => {
       };
 
       await expect(
-        sdk.getFirmQuote({ params: { ...params, buyAmount: '1000000' } })
+        sdk.getFirmQuote({
+          params: { ...params, buyAmount: '1000000' },
+          chainId: CHAIN_ID,
+        })
       ).rejects.toThrow('Do not provide both fields');
 
-      await expect(sdk.getFirmQuote({ params: {} })).rejects.toThrow(
+      await expect(
+        sdk.getFirmQuote({ params: {}, chainId: CHAIN_ID })
+      ).rejects.toThrow(
         'The swap request params requires either a sellAmount or buyAmount'
       );
 
-      await expect(sdk.getFirmQuote({ params })).resolves.toBeTruthy();
+      await expect(
+        sdk.getFirmQuote({ params, chainId: CHAIN_ID })
+      ).resolves.toBeTruthy();
     });
 
     it('handles firm quote request errors', async () => {
-      const sdk = new ZeroExSdk(CHAIN_ID, GOERLI_PROVIDER, SIGNER);
       const params = {
         buyToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
         sellAmount: '26302304322109228',
@@ -152,6 +160,7 @@ describe('ZeroExSdk: get liquidity', () => {
             ...params,
             sellToken: 'doesntexist',
           },
+          chainId: CHAIN_ID,
         })
       ).rejects.toThrow('Could not find token `doesntexist`');
 
@@ -161,6 +170,7 @@ describe('ZeroExSdk: get liquidity', () => {
             ...params,
             sellToken: 'eth',
           },
+          chainId: CHAIN_ID,
         })
       ).resolves.toBeTruthy();
     });
@@ -174,23 +184,28 @@ describe('ZeroExSdk: fill swap order', () => {
   // Use Ropsten until 0x API releases Goerli endpoint
   const ROPSTEN_PROVIDER = new StaticJsonRpcProvider(ROPSTEN_RPC_TESTNET);
   const WALLET = new Wallet(WALLET_PRIVATE_KEY);
-  const SIGNER = WALLET.connect(ROPSTEN_PROVIDER);
+  const ROPSTEN_SIGNER = WALLET.connect(ROPSTEN_PROVIDER);
   const CHAIN_ID = CHAIN_IDS.ROPSTEN;
+  const sdk = new ZeroExSdk();
 
   describe('fill swap order', () => {
     it('successfully fills a swap order', async () => {
-      const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER);
       // Fetches firm quote
       const quote = (await sdk.getFirmQuote({
         params: {
           sellToken: 'ETH',
           buyToken: 'DAI',
           sellAmount: (1e9).toString(),
-          takerAddress: SIGNER.address,
+          takerAddress: ROPSTEN_SIGNER.address,
         },
+        chainId: CHAIN_ID,
       })) as SwapQuote;
       // Fills quote and wait for tx confirmation
-      const txResponse = await sdk.fillOrder(quote);
+      const txResponse = await sdk.fillOrder({
+        chainId: CHAIN_ID,
+        quote,
+        signer: ROPSTEN_SIGNER,
+      });
       // Wait for tx to be confirmed and mined
       const { status, transactionHash } = await txResponse.wait();
       expect(status).toBe(1); // 0 = reverted, 1 = success

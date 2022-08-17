@@ -20,6 +20,12 @@ export const CHAIN_IDS = {
   MAINNET: 1,
   ROPSTEN: 3,
   GOERLI: 5,
+  OPTIMISM: 10,
+  BSC: 56,
+  POLYGON: 137,
+  FANTOM: 250,
+  CELO: 42220,
+  AVALANCHE: 43114,
 };
 
 export const ZEROEX_CONTRACT_ADDRESS =

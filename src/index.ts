@@ -1,7 +1,6 @@
-import { Signer } from '@ethersproject/abstract-signer';
-import { BigNumberish } from '@ethersproject/bignumber';
+import { BigNumber } from '@ethersproject/bignumber';
 import { MaxInt256, MaxUint256 } from '@ethersproject/constants';
-import { BaseProvider, TransactionResponse } from '@ethersproject/providers';
+import { TransactionResponse } from '@ethersproject/providers';
 import { arrayify, splitSignature } from '@ethersproject/bytes';
 import fetch from 'isomorphic-unfetch';
 import qs from 'qs';
@@ -11,13 +10,17 @@ import {
   ZeroExSdkOptions,
   FetchPriceOrQuoteArgs,
   SwapPrice,
-  TransactionOverrides,
   RfqmPrice,
   RfqmQuote,
   SwapQuote,
   PostRfqmTransactionSubmitSerializedResponse,
   RfqmTransactionStatusResponse,
   RfqmTypes,
+  ApproveTokenParams,
+  AllowanceParams,
+  RfqmTxStatusArgs,
+  FillRfqmOrderArgs,
+  FillOrderArgs,
 } from './types';
 import {
   validateAmounts,
@@ -25,22 +28,12 @@ import {
   getRootApiEndpoint,
   verifyRfqmIsLiveOrThrow,
 } from './utils';
+import { ContractTransaction } from 'ethers';
 
 class ZeroExSdk {
-  private chainId: number;
-  public provider: BaseProvider;
-  public signer: Signer;
   private ZeroExSdkOptions?: ZeroExSdkOptions;
 
-  constructor(
-    chainId: string | number,
-    provider: BaseProvider,
-    signer: Signer,
-    ZeroExSdkOptions?: ZeroExSdkOptions
-  ) {
-    this.chainId = parseInt(chainId.toString(10), 10);
-    this.provider = provider;
-    this.signer = signer;
+  constructor(ZeroExSdkOptions?: ZeroExSdkOptions) {
     this.ZeroExSdkOptions = ZeroExSdkOptions;
   }
 
@@ -50,18 +43,25 @@ class ZeroExSdk {
    * - {@link https://docs.0x.org/market-makers/docs/introduction#indicative-pricing}
    *
    * @param params: The request params for the 0x API `/price` endpoint.
-   * @param type: Optional 'swap' or 'rfqm' resource type. Defaults to 'swap'.
-   * @param fetchFn: An optional fetch function.
+   * @param resource: Optional 'swap' or 'rfqm' resource type. Defaults to 'swap'.
+   * @param chainId - Chain ID number for this transaction. Optional if ZeroExSdkOptions.apiUrl is defined
+   * @param fetchFn: An optional fetch function. Defaults to fetch.
    * @returns The indicative price
    */
   async getIndicativePrice({
     params,
     resource = 'swap',
+    chainId,
     fetchFn = fetch,
   }: FetchPriceOrQuoteArgs): Promise<SwapPrice | RfqmPrice> {
     validateAmounts(params);
-    const endpoint =
-      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
+    const endpoint = chainId
+      ? getRootApiEndpoint(chainId)
+      : this.ZeroExSdkOptions?.apiUrl;
+
+    if (!endpoint) {
+      throw new Error('chainId (or API url set in constructor) is required.');
+    }
 
     if (resource === 'rfqm') {
       verifyRfqmIsLiveOrThrow(endpoint);
@@ -91,18 +91,25 @@ class ZeroExSdk {
    * - {@link https://docs.0x.org/market-makers/docs/introduction#firm-quotes}
    *
    * @param params: The request params for the 0x API `/quote` endpoint.
-   * @param type: Optional 'swap' or 'rfqm' resource type. Defaults to 'swap'.
+   * @param resource: Optional 'swap' or 'rfqm' resource type. Defaults to 'swap'.
+   * @param chainId - Chain ID number for this transaction. Optional if ZeroExSdkOptions.apiUrl is defined
    * @param fetchFn: An optional fetch function.
    * @returns The firm quote
    */
   async getFirmQuote({
     params,
     resource = 'swap',
+    chainId,
     fetchFn = fetch,
   }: FetchPriceOrQuoteArgs): Promise<SwapQuote | RfqmQuote> {
     validateAmounts(params);
-    const endpoint =
-      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
+    const endpoint = chainId
+      ? getRootApiEndpoint(chainId)
+      : this.ZeroExSdkOptions?.apiUrl;
+
+    if (!endpoint) {
+      throw new Error('chainId (or API url set in constructor) is required.');
+    }
 
     if (resource === 'rfqm') {
       verifyRfqmIsLiveOrThrow(endpoint);
@@ -129,35 +136,31 @@ class ZeroExSdk {
     return data;
   }
 
-  approveToken = async ({
+  async approveToken({
     tokenContractAddress,
     contractAddressToApprove,
+    signer,
     amount,
     txOptions,
-  }: {
-    tokenContractAddress: string;
-    contractAddressToApprove: string;
-    amount?: BigNumberish;
-    txOptions?: TransactionOverrides;
-  }) => {
-    const erc20 = Erc20__factory.connect(tokenContractAddress, this.signer);
+  }: ApproveTokenParams): Promise<ContractTransaction> {
+    const erc20 = Erc20__factory.connect(tokenContractAddress, signer);
     const tx = erc20.approve(contractAddressToApprove, amount ?? MaxInt256, {
       ...txOptions,
     });
 
     return tx;
-  };
+  }
 
-  getAllowance = async ({
+  async getAllowance({
     tokenContractAddress,
     contractAddressToApprove,
     walletAddress,
-  }: {
-    tokenContractAddress: string;
-    contractAddressToApprove: string;
-    walletAddress: string;
-  }) => {
-    const erc20 = Erc20__factory.connect(tokenContractAddress, this.provider);
+    signerOrProvider,
+  }: AllowanceParams): Promise<BigNumber> {
+    const erc20 = Erc20__factory.connect(
+      tokenContractAddress,
+      signerOrProvider
+    );
 
     if (tokenContractAddress.toLowerCase() === ETH_FAKE_ADDRESS) {
       return MaxUint256;
@@ -169,25 +172,31 @@ class ZeroExSdk {
     );
 
     return approvalAmount;
-  };
+  }
 
   /**
    * Submits the ERC-20 token swap on chain
    * @param quote - The data returned from getFirmQuote()
+   * @param signer - Signer who will send the transaction
+   * @param chainId - Chain ID number for this transaction.
    * @returns The transaction response
    */
-  async fillOrder(quote: SwapQuote): Promise<TransactionResponse> {
-    if (!quote) {
-      throw new Error(`No quote data provided!`);
-    }
+  async fillOrder({
+    quote,
+    signer,
+    chainId,
+  }: FillOrderArgs): Promise<TransactionResponse> {
+    if (!quote) throw new Error(`No quote data provided!`);
+    if (!signer) throw new Error(`No signer provided!`);
+    if (!chainId) throw new Error(`No chainId provided!`);
 
-    const txResponse = await this.signer.sendTransaction({
+    const txResponse = await signer.sendTransaction({
       to: quote.to,
       data: quote.data,
       gasLimit: quote.gas,
       gasPrice: quote.gasPrice,
       value: quote.value,
-      chainId: this.chainId,
+      chainId,
     });
 
     return txResponse;
@@ -198,20 +207,21 @@ class ZeroExSdk {
    * - {@link https://docs.0x.org/market-makers/guides/signing-0x-orders}
    * - {@link https://docs.0x.org/market-makers/docs/introduction#rfq-m-1}
    * @param quote - The data returned from getFirmQuote()
+   * @param chainId: Chain ID number for this transaction.
    * @param fetchFn: An optional fetch function.
    * @returns The transaction response after RFQm fill submission
    */
-  async fillRfqmOrder(
-    quote: RfqmQuote,
-    fetchFn = fetch
-  ): Promise<PostRfqmTransactionSubmitSerializedResponse> {
+  async fillRfqmOrder({
+    quote,
+    chainId,
+    signer,
+    fetchFn = fetch,
+  }: FillRfqmOrderArgs): Promise<PostRfqmTransactionSubmitSerializedResponse> {
     if (!quote) {
       throw new Error(`No quote data provided!`);
     }
 
-    const rawSignature = await this.signer.signMessage(
-      arrayify(quote.orderHash)
-    );
+    const rawSignature = await signer.signMessage(arrayify(quote.orderHash));
     const { v, r, s } = splitSignature(rawSignature);
     const unpackedSignedSignature = {
       v,
@@ -220,8 +230,12 @@ class ZeroExSdk {
       signatureType: 3,
     };
 
-    const endpoint =
-      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
+    const endpoint = chainId
+      ? getRootApiEndpoint(chainId)
+      : this.ZeroExSdkOptions?.apiUrl;
+    if (!endpoint)
+      throw new Error('chainId (or API url set in constructor) is required.');
+
     const url = `${endpoint}/rfqm/v1/submit`;
     const body = {
       signature: unpackedSignedSignature,
@@ -250,19 +264,25 @@ class ZeroExSdk {
   /**
    * Fetches the RFQm order transaction status
    * @param txHash: The order transaction hash from RFQm fill submission
+   * @param chainId: Chain ID number for this transaction.
    * @param fetchFn: An optional fetch function.
    * @returns The transaction status and all transactions executed for the RFQm order
    */
-  async getRfqmTxStatus(
-    txHash: string,
-    fetchFn = fetch
-  ): Promise<RfqmTransactionStatusResponse> {
+  async getRfqmTxStatus({
+    txHash,
+    chainId,
+    fetchFn = fetch,
+  }: RfqmTxStatusArgs): Promise<RfqmTransactionStatusResponse> {
     if (!txHash) {
       throw new Error(`Transaction hash not provided!`);
     }
 
-    const endpoint =
-      this.ZeroExSdkOptions?.apiUrl ?? getRootApiEndpoint(this.chainId);
+    const endpoint = chainId
+      ? getRootApiEndpoint(chainId)
+      : this.ZeroExSdkOptions?.apiUrl;
+    if (!endpoint)
+      throw new Error('chainId (or API url set in constructor) is required.');
+
     const statusUrl = `${endpoint}/rfqm/v1/status/${txHash}`;
     const response = await fetchFn(statusUrl, {
       headers: {

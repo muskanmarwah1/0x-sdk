@@ -20,7 +20,7 @@ Swap tokens with the 0x SDK:
 import { ZeroExSdk } from '@0x/0x-sdk';
 
 // Instantiate SDK
-const sdk = new ZeroExSdk(chainId, provider, signer);
+const sdk = new ZeroExSdk();
 const takerAddress = await signer.getAddress();
 
 // Request params for the `/swap` resource to swap 1 WETH for DAI
@@ -35,24 +35,27 @@ const params = {
 const price = await sdk.getIndicativePrice({
   resource: 'swap',
   params,
+  chainId,
 });
 
 // Get firm quote to swap 1 WETH for DAI
 const quote = await sdk.getFirmQuote({
   resource: 'swap',
   params,
+  chainId,
 });
 
 // Approve ZeroEx Exchange Proxy to spend WETH
 const contractTx = await sdk.approveToken({
   tokenContractAddress: WETH_ADDRESS,
   contractAddressToApprove: ZEROEX_CONTRACT_ADDRESS,
+  signer,
 });
 
 await contractTx.wait();
 
 // Submit the quote to ZeroEx Exchange Proxy
-const txResponse = await sdk.fillOrder(quote);
+const txResponse = await sdk.fillOrder({ quote, signer, chainId });
 
 // Wait for the transaction to be mined
 const { transactionHash } = await txResponse.wait();

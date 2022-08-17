@@ -1,4 +1,6 @@
 import { Overrides } from '@ethersproject/contracts';
+import { BaseProvider } from '@ethersproject/providers';
+import { BigNumberish, Signer } from 'ethers';
 
 export interface ZeroExSdkOptions {
   apiUrl?: string;
@@ -9,9 +11,28 @@ export type ResourceType = 'swap' | 'rfqm';
 
 export interface FetchPriceOrQuoteArgs {
   params: SwapParams;
+  chainId?: number | string;
   resource?: ResourceType;
   fetchFn?: Function;
 }
+
+export interface RfqmTxStatusArgs {
+  txHash: string;
+  chainId?: number;
+  fetchFn?: Function;
+}
+
+export interface FillOrderArgs {
+  quote: SwapQuote;
+  chainId: number;
+  signer: Signer;
+}
+
+export interface FillRfqmOrderArgs extends Omit<FillOrderArgs, 'quote'> {
+  quote: RfqmQuote;
+  fetchFn?: Function;
+}
+
 interface PriceComparison {
   name: string;
   price: string | null;
@@ -142,6 +163,22 @@ export interface RfqmTransactionStatusResponse {
   status: RfqmTransactionStates;
   transactions: { hash: string; timestamp: number }[];
 }
+
+export interface ApproveTokenParams {
+  tokenContractAddress: string;
+  contractAddressToApprove: string;
+  signer: Signer;
+  amount?: BigNumberish;
+  txOptions?: TransactionOverrides;
+}
+
+export interface AllowanceParams {
+  tokenContractAddress: string;
+  contractAddressToApprove: string;
+  walletAddress: string;
+  signerOrProvider: BaseProvider | Signer;
+}
+
 interface ValidationError {
   field: string;
   code: number;

@@ -15,17 +15,18 @@ describe('ZeroExSdk: get RFQm liquidity and fill order', () => {
     'ebc9ecb342624853540531f439a917b889bdf7730fa84f226657831f806b0677';
   const ROPSTEN_PROVIDER = new StaticJsonRpcProvider(ROPSTEN_RPC_TESTNET);
   const WALLET = new Wallet(WALLET_PRIVATE_KEY);
-  const SIGNER = WALLET.connect(ROPSTEN_PROVIDER);
+  const ROPSTEN_SIGNER = WALLET.connect(ROPSTEN_PROVIDER);
   const CHAIN_ID = CHAIN_IDS.ROPSTEN;
   const WETH_ADDRESS = '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2';
   const TEST_TOKEN_A = '0xf84830b73b2ed3c7267e7638f500110ea47fdf30';
   const TEST_TOKEN_B = '0x374a16f5e686c09b0cc9e8bc3466b3b645c74aa7';
 
   it('fetches an indicative price', async () => {
-    const SELL_AMOUNT = (1e18).toString();
-    const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER, {
+    const sdk = new ZeroExSdk({
       apiUrl: 'https://api.matcha.0x.org',
     });
+
+    const SELL_AMOUNT = (1e18).toString();
     const price = await sdk.getIndicativePrice({
       params: {
         sellToken: 'WETH',
@@ -50,9 +51,10 @@ describe('ZeroExSdk: get RFQm liquidity and fill order', () => {
   });
 
   it('handles RFQm firm quote request errors', async () => {
-    const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER, {
+    const sdk = new ZeroExSdk({
       apiUrl: 'https://api.matcha.0x.org',
     });
+
     const params = {
       buyToken: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
       sellAmount: '26302304322109228',
@@ -94,7 +96,7 @@ describe('ZeroExSdk: get RFQm liquidity and fill order', () => {
   });
 
   it('handles error if API key is invalid', async () => {
-    const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER, {
+    const sdk = new ZeroExSdk({
       apiKey: 'invalid key',
     });
     const params = {
@@ -108,12 +110,13 @@ describe('ZeroExSdk: get RFQm liquidity and fill order', () => {
       sdk.getFirmQuote({
         params,
         resource: 'rfqm',
+        chainId: CHAIN_ID,
       })
     ).rejects.toThrow('Invalid API key');
   });
 
   it('fills RFQm order', async () => {
-    const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER, {
+    const sdk = new ZeroExSdk({
       apiKey: process.env.RFQM_API_KEY,
     });
     const params = {
@@ -126,16 +129,27 @@ describe('ZeroExSdk: get RFQm liquidity and fill order', () => {
     const quoteRes = (await sdk.getFirmQuote({
       params,
       resource: 'rfqm',
+      chainId: CHAIN_ID,
     })) as RfqmQuote;
-    const submitOrderResponse = await sdk.fillRfqmOrder(quoteRes);
+    const submitOrderResponse = await sdk.fillRfqmOrder({
+      chainId: CHAIN_ID,
+      quote: quoteRes,
+      signer: ROPSTEN_SIGNER,
+    });
 
     const poll = async function() {
-      let result = await sdk.getRfqmTxStatus(submitOrderResponse.orderHash);
+      let result = await sdk.getRfqmTxStatus({
+        txHash: submitOrderResponse.orderHash,
+        chainId: CHAIN_ID,
+      });
       while (result.status !== 'confirmed') {
         await new Promise(resolve => {
           setTimeout(resolve, 2000);
         });
-        result = await sdk.getRfqmTxStatus(submitOrderResponse.orderHash);
+        result = await sdk.getRfqmTxStatus({
+          txHash: submitOrderResponse.orderHash,
+          chainId: CHAIN_ID,
+        });
       }
       return result;
     };
@@ -146,7 +160,7 @@ describe('ZeroExSdk: get RFQm liquidity and fill order', () => {
   });
 
   it('handles error if sell token has not been approved', async () => {
-    const sdk = new ZeroExSdk(CHAIN_ID, ROPSTEN_PROVIDER, SIGNER, {
+    const sdk = new ZeroExSdk({
       apiKey: process.env.RFQM_API_KEY,
     });
     const params = {
@@ -159,10 +173,15 @@ describe('ZeroExSdk: get RFQm liquidity and fill order', () => {
     const quoteRes = (await sdk.getFirmQuote({
       params,
       resource: 'rfqm',
+      chainId: CHAIN_ID,
     })) as RfqmQuote;
 
-    await expect(sdk.fillRfqmOrder(quoteRes)).rejects.toThrow(
-      '[Validation Failed] n/a: order is not fillable.'
-    );
+    await expect(
+      sdk.fillRfqmOrder({
+        quote: quoteRes,
+        chainId: CHAIN_ID,
+        signer: ROPSTEN_SIGNER,
+      })
+    ).rejects.toThrow('[Validation Failed] n/a: order is not fillable.');
   });
 });

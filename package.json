@@ -15,7 +15,7 @@
     "build": "tsdx build",
     "test": "tsdx test -i",
     "lint": "tsdx lint",
-    "prepare": "tsdx build; typechain --out-dir 'src/contracts' --target=ethers-v5 'src/abis/**/*.json'",
+    "prepare": "typechain --out-dir 'src/contracts' --target=ethers-v5 'src/abis/**/*.json'; tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
     "prettier": "prettier --write \"**/*.{ts,tsx,js,json,css,yml,md}\"",
