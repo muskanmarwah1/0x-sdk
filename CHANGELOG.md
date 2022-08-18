@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.2.0](https://github.com/0xProject/0x-sdk/compare/v0.1.1...v0.2.0) (2022-08-17)
+
+
+### ⚠ BREAKING CHANGES
+
+* fillOrder fillRfqmOrder and getRfqmTxStatus take single object as parameter instead of spread parameters.
+
+### Features
+
+* generalize sdk instance, moving provider, signer and chainId to method parameters. ([#29](https://github.com/0xProject/0x-sdk/issues/29)) ([8cae5a2](https://github.com/0xProject/0x-sdk/commit/8cae5a2e0841c51e809aeaba4ac1941a68d575bd))
+
 ## [0.1.1](https://github.com/0xProject/0x-sdk/compare/v0.1.0...v0.1.1) (2022-07-29)
 
 
