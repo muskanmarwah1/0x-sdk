@@ -63,6 +63,7 @@
   "dependencies": {
     "@ethersproject/abi": "^5.6.1",
     "@ethersproject/providers": "^5.6.5",
+    "dotenv": "^16.0.1",
     "ethers": "^5.6.5",
     "isomorphic-unfetch": "^3.1.0",
     "qs": "^6.10.5"

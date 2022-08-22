@@ -75,6 +75,8 @@ yarn
 yarn test
 ```
 
+Note: Tests run against testnets and require API key(s) to be set. See the `.example.env` file for the necessary environment variables. 
+
 ## Release
 
 Releases are automated with Google's [release-please](https://github.com/googleapis/release-please) GitHub action. Simply merge the [release pull request](https://github.com/googleapis/release-please#whats-a-release-pr) (PR) to publish a release 🚀.

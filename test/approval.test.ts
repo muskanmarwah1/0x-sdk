@@ -2,7 +2,8 @@ import { Wallet } from '@ethersproject/wallet';
 import { MaxInt256 } from '@ethersproject/constants';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { ZeroExSdk } from '../src';
-import { GOERLI_RPC_TESTNET, ZEROEX_CONTRACT_ADDRESS } from '../src/constants';
+import { ZEROEX_CONTRACT_ADDRESS } from '../src/constants';
+import { GOERLI_RPC_TESTNET } from './constants';
 
 // Sometimes it takes a minute or two to mine a block on a testnet
 jest.setTimeout(120 * 1000);

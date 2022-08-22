@@ -1,11 +1,8 @@
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { Wallet } from '@ethersproject/wallet';
 import { ZeroExSdk } from '../src';
-import {
-  DAI_CONTRACT_ADDRESS_MAINNET,
-  ROPSTEN_RPC_TESTNET,
-  CHAIN_IDS,
-} from '../src/constants';
+import { DAI_CONTRACT_ADDRESS_MAINNET, CHAIN_IDS } from '../src/constants';
+import { ROPSTEN_RPC_TESTNET } from './constants';
 import { RfqmQuote } from '../src/types';
 
 describe('ZeroExSdk: get RFQm liquidity and fill order', () => {

@@ -4,10 +4,9 @@ import { ZeroExSdk } from '../src';
 import {
   ETH_FAKE_ADDRESS,
   DAI_CONTRACT_ADDRESS_MAINNET,
-  ROPSTEN_RPC_TESTNET,
-  // GOERLI_RPC_TESTNET,
   CHAIN_IDS,
 } from '../src/constants';
+import { ROPSTEN_RPC_TESTNET } from './constants';
 import { SwapQuote } from '../src/types';
 
 describe('ZeroExSdk: get liquidity', () => {
