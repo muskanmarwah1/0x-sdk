@@ -1,6 +1,28 @@
 {
   "version": "0.2.0",
   "license": "MIT",
+  "name": "@0x/0x-sdk",
+  "author": "0x Labs",
+  "description": "TypeScript SDK for building exchange functionality on Ethereum and EVM-compatible chains with the 0x API",
+  "keywords": [
+    "dapp",
+    "dex",
+    "erc-20",
+    "ethereum",
+    "evm chains",
+    "exchange",
+    "liquidity aggregator",
+    "tokens",
+    "swap"
+  ],
+  "homepage": "https://github.com/0xProject/0x-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/0xProject/0x-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/0xProject/0x-sdk/issues/new?template=bug_report.yml&title=[bug]+<replace+this+with+a+title>"
+  },
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "files": [
@@ -36,8 +58,6 @@
   "eslintIgnore": [
     "src/contracts"
   ],
-  "name": "@0x/0x-sdk",
-  "author": "0x Labs",
   "module": "dist/zero-ex-sdk.esm.js",
   "size-limit": [
     {
@@ -61,8 +81,6 @@
     "typescript": "^4.6.4"
   },
   "dependencies": {
-    "@ethersproject/abi": "^5.6.1",
-    "@ethersproject/providers": "^5.6.5",
     "dotenv": "^16.0.1",
     "ethers": "^5.6.5",
     "isomorphic-unfetch": "^3.1.0",
