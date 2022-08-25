@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.1](https://github.com/0xProject/0x-sdk/compare/v0.2.0...v0.2.1) (2022-08-25)
+
+
+### Bug Fixes
+
+* remove alchemy keys from source code ([#35](https://github.com/0xProject/0x-sdk/issues/35)) ([61724ce](https://github.com/0xProject/0x-sdk/commit/61724ce74faf1de0a8a386177606c40373c72416))
+* update api endpoints ([#32](https://github.com/0xProject/0x-sdk/issues/32)) ([2411ad6](https://github.com/0xProject/0x-sdk/commit/2411ad6a6f7b4e375adb4ed2d5e854a6792f817c))
+
 ## [0.2.0](https://github.com/0xProject/0x-sdk/compare/v0.1.1...v0.2.0) (2022-08-17)
 
 
