@@ -14,7 +14,7 @@ yarn add @0x/0x-sdk
 
 ## Usage
 
-Swap tokens with the 0x SDK:
+Swap tokens with the 0x-sdk:
 
 ```ts
 import { ZeroExSdk } from '@0x/0x-sdk';
@@ -61,29 +61,28 @@ const txResponse = await sdk.fillOrder({ quote, signer, chainId });
 const { transactionHash } = await txResponse.wait();
 ```
 
-## Development
+## Example
 
-1. Install dependencies, generate types, and run build
+This repository includes a basic example in the `[/examples](/examples)` folder which demonstrates basic exchange functionality. Follow these instructions to run the example:
+
+1. Navigate to the `/example` folder
+
+```
+cd /example
+```
+
+2. Install the dependencies
 
 ```
 yarn
 ```
 
-2. Run tests
+3. Run the example app
 
 ```
-yarn test
+yarn dev
 ```
 
-Note: Tests run against testnets and require API key(s) to be set. See the `.example.env` file for the necessary environment variables. 
+## Contributing
 
-## Release
-
-Releases are automated with Google's [release-please](https://github.com/googleapis/release-please) GitHub action. Simply merge the [release pull request](https://github.com/googleapis/release-please#whats-a-release-pr) (PR) to publish a release 🚀.
-
-The GitHub action parses [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) to help automate releases. It creates a release PR that is kept up-to-date as additional commits are merged. The release PR can be merged once maintainers are ready to publish the release. Merging the release PR triggers the action to:
-
-1) Update the `CHANGELOG.md` and `package.json` 
-2) Tag the commit with the [version](https://semver.org/)
-3) Create a GitHub release based on the tag
-4) Publish [the package](https://www.npmjs.com/package/@0x/0x-sdk) to npm
+Please follow this project's [contributing guidelines](./.github/contributing.md).
