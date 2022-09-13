@@ -73,7 +73,7 @@
     "@size-limit/preset-small-lib": "^8.0.1",
     "@typechain/ethers-v5": "^10.0.0",
     "@types/qs": "^6.9.7",
-    "husky": "^7.0.4",
+    "husky": "^8.0.1",
     "size-limit": "^8.0.1",
     "tsdx": "^0.14.1",
     "tslib": "^2.4.0",
