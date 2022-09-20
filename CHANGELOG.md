@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.0](https://github.com/0xProject/0x-sdk/compare/v0.2.1...v0.3.0) (2022-09-20)
+
+
+### Features
+
+* get sources method ([#45](https://github.com/0xProject/0x-sdk/issues/45)) ([9d949fa](https://github.com/0xProject/0x-sdk/commit/9d949fa67e53cc519a5a5420dd482410da2e7315))
+
 ## [0.2.1](https://github.com/0xProject/0x-sdk/compare/v0.2.0...v0.2.1) (2022-08-25)
 
 
