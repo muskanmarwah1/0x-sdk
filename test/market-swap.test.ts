@@ -8,10 +8,21 @@ import {
 } from '../src/constants';
 import { ROPSTEN_RPC_TESTNET } from './constants';
 import { SwapQuote } from '../src/types';
+import { ERROR_CHAIN_ID_URL_REQUIRED } from '../src/errors';
 
 describe('ZeroExSdk: get liquidity', () => {
   const CHAIN_ID = CHAIN_IDS.MAINNET;
   const sdk = new ZeroExSdk();
+
+  describe('liquidity sources', () => {
+    it('fetches liquidity sources', async () => {
+      await expect(sdk.getSources()).rejects.toThrow(
+        ERROR_CHAIN_ID_URL_REQUIRED
+      );
+
+      await expect(sdk.getSources({ chainId: CHAIN_ID })).resolves.toBeTruthy();
+    });
+  });
 
   describe('indicative price', () => {
     it('fetches an indicative price', async () => {

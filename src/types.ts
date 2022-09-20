@@ -1,9 +1,10 @@
 import { Overrides } from '@ethersproject/contracts';
-import { BaseProvider } from '@ethersproject/providers';
+import { BaseProvider, TransactionRequest } from '@ethersproject/providers';
 import { BigNumberish, Signer } from 'ethers';
 
 export interface ZeroExSdkOptions {
   apiUrl?: string;
+  apiUrls?: { [key: number]: string };
   apiKey?: string;
 }
 
@@ -11,7 +12,7 @@ export type ResourceType = 'swap' | 'rfqm';
 
 export interface FetchPriceOrQuoteArgs {
   params: SwapParams;
-  chainId?: number | string;
+  chainId?: number;
   resource?: ResourceType;
   fetchFn?: Function;
 }
@@ -26,6 +27,7 @@ export interface FillOrderArgs {
   quote: SwapQuote;
   chainId: number;
   signer: Signer;
+  txOptions?: TransactionRequest;
 }
 
 export interface FillRfqmOrderArgs extends Omit<FillOrderArgs, 'quote'> {
@@ -87,8 +89,6 @@ export interface SwapParams {
   sellAmount?: string;
   buyAmount?: string;
   takerAddress?: string;
-  sellingAmount?: string;
-  buyingAmount?: string;
   slippagePercentage?: number;
   gasPrice?: string;
   excludedSources?: string[];
@@ -177,6 +177,15 @@ export interface AllowanceParams {
   contractAddressToApprove: string;
   walletAddress: string;
   signerOrProvider: BaseProvider | Signer;
+}
+
+export interface SwapSourceParams {
+  chainId?: number;
+  fetchFn?: Function;
+}
+
+export interface SwapSourcesResponse {
+  records: string[];
 }
 
 interface ValidationError {
