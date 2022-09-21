@@ -2,7 +2,7 @@ import { Wallet } from '@ethersproject/wallet';
 import { MaxInt256 } from '@ethersproject/constants';
 import { StaticJsonRpcProvider } from '@ethersproject/providers';
 import { ZeroExSdk } from '../src';
-import { ZEROEX_CONTRACT_ADDRESS } from '../src/constants';
+import { EXCHANGE_PROXY_ADDRESSES } from '../src/constants';
 import { GOERLI_RPC_TESTNET } from './constants';
 
 // Sometimes it takes a minute or two to mine a block on a testnet
@@ -20,7 +20,7 @@ describe('ZeroExSdk: erc20 approval and allowance', () => {
     const sdk = new ZeroExSdk();
     const tx = await sdk.approveToken({
       tokenContractAddress: WETH_GOERLI_ADDRESS,
-      contractAddressToApprove: ZEROEX_CONTRACT_ADDRESS,
+      contractAddressToApprove: EXCHANGE_PROXY_ADDRESSES[5],
       signer: GOERLI_SIGNER,
     });
     const { transactionHash } = await tx.wait();
@@ -29,7 +29,7 @@ describe('ZeroExSdk: erc20 approval and allowance', () => {
 
     const allowance = await sdk.getAllowance({
       tokenContractAddress: WETH_GOERLI_ADDRESS,
-      contractAddressToApprove: ZEROEX_CONTRACT_ADDRESS,
+      contractAddressToApprove: EXCHANGE_PROXY_ADDRESSES[5],
       walletAddress: WALLET_PUBLIC_ADDRESS,
       signerOrProvider: GOERLI_PROVIDER,
     });

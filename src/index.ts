@@ -5,7 +5,7 @@ import { arrayify, splitSignature } from '@ethersproject/bytes';
 import { ContractTransaction } from '@ethersproject/contracts';
 import fetch from 'isomorphic-unfetch';
 import qs from 'qs';
-import { ETH_FAKE_ADDRESS } from './constants';
+import { ETH_FAKE_ADDRESS, EXCHANGE_PROXY_ADDRESSES } from './constants';
 import { Erc20__factory } from './contracts';
 import {
   ZeroExSdkOptions,
@@ -334,4 +334,4 @@ class ZeroExSdk {
   }
 }
 
-export { ZeroExSdk };
+export { ZeroExSdk, EXCHANGE_PROXY_ADDRESSES };
