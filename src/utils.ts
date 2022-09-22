@@ -1,4 +1,5 @@
 import { ROOT_STAGING_URL, ROOT_URLS_BY_CHAIN_ID } from './constants';
+import { EXCHANGE_PROXY_ADDRESSES } from './constants';
 import {
   SwapParams,
   RequestError,
@@ -75,4 +76,12 @@ export const verifyRfqmIsLiveOrThrow = async (
   }
 
   return undefined;
+};
+
+export const getExchangeProxyAddress = (chainId: number) => {
+  const address: string = EXCHANGE_PROXY_ADDRESSES[chainId];
+  if (!address) {
+    throw new Error(`Chain ${chainId} not yet supported by 0x API`);
+  }
+  return address;
 };

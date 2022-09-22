@@ -28,9 +28,9 @@ export const CHAIN_IDS = {
   AVALANCHE: 43114,
 };
 
-export const EXCHANGE_PROXY_ADDRESSES = {
+export const EXCHANGE_PROXY_ADDRESSES: Record<number, string> = {
   1: '0xdef1c0ded9bec7f1a1670819833240f027b25eff',
-  5: '0xdef1c0ded9bec7f1a1670819833240f027b25eff',
+  5: '0xf91bb752490473b8342a3e964e855b9f9a2a668e',
   10: '0xdef1abe32c034e558cdd535791643c58a13acc10',
   56: '0xdef1c0ded9bec7f1a1670819833240f027b25eff',
   137: '0xdef1c0ded9bec7f1a1670819833240f027b25eff',
