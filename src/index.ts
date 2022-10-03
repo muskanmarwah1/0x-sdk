@@ -5,7 +5,7 @@ import { arrayify, splitSignature } from '@ethersproject/bytes';
 import { ContractTransaction } from '@ethersproject/contracts';
 import fetch from 'isomorphic-unfetch';
 import qs from 'qs';
-import { ETH_FAKE_ADDRESS } from './constants';
+import { ETH_FAKE_ADDRESS, EXCHANGE_PROXY_ADDRESSES } from './constants';
 import { Erc20__factory } from './contracts';
 import {
   ZeroExSdkOptions,
@@ -171,7 +171,17 @@ class ZeroExSdk {
 
     return data;
   }
-
+  /**
+   * Approves 0x's smart contracts to facilitate transactions on signer's behalf for the token contract address specified.
+   * - {@link https://docs.0x.org/0x-api-swap/advanced-topics/how-to-set-your-token-allowances}
+   * - {@link https://tokenallowance.io/}
+   *
+   * @param tokenContractAddress: Token Address for appproval.
+   * @param contractAddressToApprove: ZeroEx Exchange Proxy Address - Varies per network and can be obtained via utils function `getExchangeProxyAddress(chainId)`.
+   * @param signer: Transaction signer.
+   * @param amount: Amount to approve. Defaults to MaxInt256 if not specified
+   * @returns The contract transaction Promise.
+   */
   async approveToken({
     tokenContractAddress,
     contractAddressToApprove,
@@ -186,7 +196,14 @@ class ZeroExSdk {
 
     return tx;
   }
-
+  /**
+   * Gets allowance amount for a specified token per wallet address.
+   * @param tokenContractAddress: Token Address for approval.
+   * @param contractAddressToApprove: ZeroEx Exchange Proxy Address - Varies per network and can be obtained via utils function `getExchangeProxyAddress(chainId)`.
+   * @param walletAddress: Wallet address to get allowance for.
+   * @param signerOrProvider: Optional - signer or provider.
+   * @returns Allowance
+   */
   async getAllowance({
     tokenContractAddress,
     contractAddressToApprove,
@@ -334,4 +351,4 @@ class ZeroExSdk {
   }
 }
 
-export { ZeroExSdk };
+export { ZeroExSdk, EXCHANGE_PROXY_ADDRESSES };
