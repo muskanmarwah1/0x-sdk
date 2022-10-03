@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.3.1](https://github.com/0xProject/0x-sdk/compare/v0.3.0...v0.3.1) (2022-10-03)
+
+
+### Bug Fixes
+
+* add complete list of exchange proxy addresses ([#49](https://github.com/0xProject/0x-sdk/issues/49)) ([5965e63](https://github.com/0xProject/0x-sdk/commit/5965e6391b0f49d31d36e6c90e500bb51ed76194))
+
 ## [0.3.0](https://github.com/0xProject/0x-sdk/compare/v0.2.1...v0.3.0) (2022-09-20)
 
 
